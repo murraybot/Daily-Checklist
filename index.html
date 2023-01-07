@@ -1,0 +1,206 @@
+<html>
+  <head>
+    <title>Simple Daily Checklist</title>
+    <!--The content security policy could be paired down to only your backend endpoint but this is my 
+    "make it work" tag-->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src *;worker-src 'self' blob:;  style-src 'self' 
+    'unsafe-inline' http:; script-src 'self' 'unsafe-inline' blob: http: https:; media-src *; img-src 'self' data: http: https:"
+    />
+  </head>
+  <style>
+    body {
+      background-color: darkgray;
+    }
+    #main {
+      font-family: helvetica;
+      font-size: 1.7em;
+      margin: auto;
+      width: 95%;
+      background-color: gray;
+      border-radius: 20px;
+      padding-top: 2%;
+      padding-bottom: 10%;
+    }
+    h2 {
+      text-align: center;
+      width: 100%;
+    }
+    #one {
+      margin: auto;
+      width: 98%;
+      background-color: red;
+      padding-bottom: 3%;
+      padding-top: 3%;
+      padding-left: 2%;
+      border-bottom: 1px solid black;
+    }
+    #two {
+      margin: auto;
+      width: 98%;
+      background-color: red;
+      padding-bottom: 3%;
+      border-bottom: 1px solid black;
+      padding-top: 3%;
+      padding-left: 2%;
+    }
+    #three {
+      margin: auto;
+      width: 98%;
+      background-color: red;
+      padding-bottom: 3%;
+      padding-top: 3%;
+      padding-left: 2%;
+    }
+    #sub {
+      background-color: steelblue;
+      padding: 3%;
+      border-radius: 5px;
+      user-select: none;
+      position: fixed;
+      left: 20%;
+      margin: 1%;
+      font-weight: bolder;
+    }
+    #ref {
+      background-color: steelblue;
+      padding: 3%;
+      border-radius: 5px;
+      user-select: none;
+      position: fixed;
+      left: 55%;
+      margin: 1%;
+      font-weight: bolder;
+    }
+  </style>
+  <body>
+    <div id="main">
+      <h2>Daily Checklist</h2>
+      <br />
+      <form>
+        <div id="one">
+          <label for="one">The first backup</label>
+          <input
+            type="checkbox"
+            name="one"
+            style="position: fixed; left: 70%"
+          />
+        </div>
+        <div id="two">
+          <label for="two">The second backup</label>
+          <input
+            type="checkbox"
+            name="two"
+            style="position: fixed; left: 70%"
+          />
+        </div>
+        <div id="three">
+          <label for="three">The third backup</label>
+          <input
+            type="checkbox"
+            name="three"
+            style="position: fixed; left: 70%"
+          />
+        </div>
+        <br />
+        <div id="sub">Submit</div>
+        <div id="ref">Refresh</div>
+      </form>
+    </div>
+    <script>
+      //Define the DOM elements you need to interact with
+      const sub = document.getElementById("sub");
+      const ref = document.getElementById("ref");
+      const one = document.getElementById("one");
+      const two = document.getElementById("two");
+      const three = document.getElementById("three");
+      const stats = document.forms[0];
+      //Create a new HTTP request for getting data and one for sending
+      const Http = new XMLHttpRequest();
+      const Http2 = new XMLHttpRequest();
+      //Define the endpoints from the backend
+      const url = "example.com/info";
+      const url2 = "example.com/update";
+
+      let getter = function () {
+        Http.open("GET", url);
+        Http.send();
+        //DOM elements are color coded to represent the state of connectivity and checklist status
+        //Red means no server connection yellow is incomplete and green is complete
+        Http.onreadystatechange = (e) => {
+          results = JSON.parse(Http.responseText);
+          if (results.one === false) {
+            one.style = "background-color: yellow";
+          } else if (results.one === true) {
+            one.style = "background-color: green";
+          }
+          if (results.two === false) {
+            two.style = "background-color: yellow";
+          } else if (results.two === true) {
+            two.style = "background-color: green";
+          }
+          if (results.three === false) {
+            three.style = "background-color: yellow";
+          } else if (results.three === true) {
+            three.style = "background-color: green";
+          }
+        };
+        return;
+      };
+      let setter = function () {
+        let updates = {};
+        //Builds object to be sent based on form input
+        if (stats.one.checked === true) {
+          updates["one"] = true;
+        }
+        if (stats.two.checked === true) {
+          updates["two"] = true;
+        }
+        if (stats.three.checked === true) {
+          updates["three"] = true;
+        }
+        //Checks for blank input
+        if (
+          stats.one.checked === false &&
+          stats.two.checked === false &&
+          stats.three.checked === false
+        ) {
+          alert("You must make a selection to make a change.");
+          return;
+        }
+        Http2.open("POST", url2, true);
+        Http2.setRequestHeader("Content-Type", "text/plain");
+        Http2.send(JSON.stringify(updates));
+        setTimeout(() => {
+          location.reload();
+        }, 300);
+      };
+      //Toggles checkbox status with ternary operator
+      one.onclick = () => {
+        stats.one.checked === true
+          ? (stats.one.checked = false)
+          : (stats.one.checked = true);
+      };
+      two.onclick = () => {
+        stats.two.checked === true
+          ? (stats.two.checked = false)
+          : (stats.two.checked = true);
+      };
+      three.onclick = () => {
+        stats.three.checked === true
+          ? (stats.three.checked = false)
+          : (stats.three.checked = true);
+      };
+      //Fetches inital data from backend
+      document.onload = getter();
+      //Button functionality
+      sub.onclick = () => {
+        setter();
+      };
+      ref.onclick = () => {
+        location.reload();
+      };
+    </script>
+  </body>
+</html>
